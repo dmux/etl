@@ -117,8 +117,8 @@ repos:
     hooks:
       - id: cobertura-95
         name: "gate: cobertura >= 95%"
-        description: Lento demais para todo commit — roda no push.
-        entry: uv run pytest -m "not e2e" --cov --cov-report=term-missing
+        description: Lento demais para todo commit — roda no push. Pulado enquanto src/ estiver vazio.
+        entry: tools/precommit/gate_cobertura.sh
         language: system
         pass_filenames: false
         stages: [pre-push]
