@@ -1,0 +1,37 @@
+# Configuração de domínio do projeto.
+#
+# Este é o único arquivo que os artefatos do framework leem para saber DE QUE projeto se trata.
+# Os agentes, skills, hooks e guardas de pre-commit são agnósticos: eles se especializam
+# lendo daqui. Ao usar este template num projeto novo, edite este arquivo — e só ele — antes
+# de escrever a primeira spec.
+
+[projeto]
+nome = "etl"
+# Nome do pacote Python em src/. Precisa bater com [tool.coverage] e [tool.ruff.lint.isort]
+# no pyproject.toml.
+pacote = "pipeline"
+descricao = "Pipeline de dados desenvolvido por specs, arquitetura hexagonal, PySpark + Delta sobre minilake"
+
+[dados]
+# Catálogo no minilake onde as tabelas deste projeto vivem.
+catalogo = "meu_catalogo"
+# Camadas do medalhão, na ordem. Cada uma vira um schema no catálogo.
+camadas = ["bronze", "silver", "gold"]
+# Raiz dos arquivos Delta no volume compartilhado. Sempre sob /data/.
+raiz_delta = "/data/delta"
+# Colunas de particionamento padrão. Escolha baixa cardinalidade e alto uso em filtro.
+# Deixe vazio se ainda não souber — o design da primeira spec decide.
+particionamento = []
+
+[fontes]
+# Diretórios de dado bruto. São tratados como IMUTÁVEIS: um hook de PreToolUse bloqueia
+# qualquer escrita neles. Aceita glob. Vazio = nenhuma proteção.
+somente_leitura = ["south-america/"]
+
+[idioma]
+# Idioma dos identificadores de domínio no código: "pt" ou "en".
+# Regra: siga o idioma do schema de dados que você já tem. Traduzir cria um dicionário
+# a mais para manter errado.
+codigo = "pt"
+# Idioma da documentação e das specs.
+docs = "pt"

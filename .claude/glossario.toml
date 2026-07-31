@@ -1,0 +1,28 @@
+# Glossário do projeto, em formato legível por máquina.
+#
+# A versão narrativa, para humanos e para o agente, é .claude/steering/glossario-dados.md.
+# Este arquivo existe para o que precisa ser VERIFICADO automaticamente: o guarda de
+# pre-commit `glossario` lê a seção [sinonimos] e barra commit que use o termo errado.
+#
+# Comece vazio. Cada spec que introduz um conceito novo acrescenta aqui, na mesma rodada
+# em que acrescenta ao glossário narrativo.
+
+[sinonimos]
+# Mapeia termo-proibido = termo-canonico.
+#
+# A comparação é feita sobre cada palavra de um identificador, depois de quebrar por `_` e
+# por mudança de caixa. Então "score_home" e "scoreHome" batem em "score" e "home".
+#
+# Só liste sinônimo que causa dano real: dois nomes para o MESMO conceito. Palavra comum
+# do idioma sem conceito por trás só gera falso positivo e faz o time desativar o guarda.
+#
+# Exemplo (remova ao instanciar o projeto):
+# "cliente_id" = "id_cliente"
+# "customer"   = "cliente"
+
+[termos]
+# Opcional: vocabulário canônico, um termo por linha, com a definição de uma frase.
+# Serve de referência rápida e de fonte para revisão. O guarda não usa esta seção.
+#
+# Exemplo:
+# cliente = "Pessoa física ou jurídica com ao menos um contrato ativo"

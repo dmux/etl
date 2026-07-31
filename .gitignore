@@ -1,0 +1,39 @@
+# Dados brutos versionados no próprio repositório upstream (openfootball)
+/south-america/
+
+# Python
+__pycache__/
+*.py[cod]
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+
+# Ferramentas
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Spark
+spark-warehouse/
+metastore_db/
+derby.log
+*.crc
+
+# Saídas locais do pipeline
+/data/
+/out/
+
+# Editores / SO
+.DS_Store
+.idea/
+.vscode/
+
+# Claude Code — configuração pessoal, não do projeto
+.claude/settings.local.json

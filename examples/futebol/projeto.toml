@@ -1,0 +1,27 @@
+# Exemplo de .claude/projeto.toml instanciado — domínio: futebol sul-americano (openfootball).
+# Compare com o template em .claude/projeto.toml para ver o que muda.
+
+[projeto]
+nome = "etl-futebol"
+pacote = "etl_futebol"
+descricao = "Resultados de futebol sul-americano do openfootball, em tabelas Delta consultáveis"
+
+[dados]
+catalogo = "futebol"
+camadas = ["bronze", "silver", "gold"]
+raiz_delta = "/data/delta"
+# Aparecem no filtro de praticamente toda consulta e têm cardinalidade baixa (9 temporadas,
+# 3 competições). Note que `data` NÃO está aqui: particionar por ela geraria centenas de
+# partições minúsculas e deixaria o pipeline mais lento do que sem particionamento.
+particionamento = ["temporada", "competicao"]
+
+[fontes]
+# Clone upstream do openfootball, atualizado semanalmente. Editar aqui faria o pipeline
+# divergir da origem, e o próximo `git pull` apagaria a mudança em silêncio.
+somente_leitura = ["south-america/"]
+
+[idioma]
+# O schema que já existe no minilake (futebol.brasileirao.partidas) tem colunas em português:
+# mandante, visitante, gols_mandante. Traduzir criaria um dicionário a mais para manter errado.
+codigo = "pt"
+docs = "pt"

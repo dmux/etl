@@ -1,0 +1,35 @@
+# Exemplo de .claude/glossario.toml instanciado — domínio: futebol.
+# Compare com o template vazio em .claude/glossario.toml.
+
+[sinonimos]
+# Cada linha aqui existe porque o termo da esquerda apareceu, ou apareceria, significando
+# exatamente o mesmo conceito da direita. Nenhum é hipotético.
+"home" = "mandante"
+"away" = "visitante"
+"casa" = "mandante"
+"fora" = "visitante"
+"team" = "clube"
+"equipe" = "clube"
+"season" = "temporada"
+"ano" = "temporada"
+"match" = "partida"
+"game" = "partida"
+"jogo" = "partida"
+"campeonato" = "competicao"
+"torneio" = "competicao"
+"round" = "rodada"
+"pens" = "penaltis"
+
+# Note o que NÃO está aqui: `data`, `hora`, `status`, `gols`. São palavras comuns sem um
+# segundo nome concorrente — listá-las só geraria falso positivo, e guarda com falso positivo
+# é guarda que o time desativa.
+
+[termos]
+partida = "Jogo entre dois clubes, em uma data, por uma competição. Grão de bronze e silver"
+clube = "Agremiação. O nome bruto varia entre competições e é normalizado na silver"
+mandante = "Clube que joga em casa — o primeiro nome da linha no arquivo de origem"
+visitante = "Clube que joga fora — o nome após o separador ' v '"
+temporada = "Ano da edição, extraído do cabeçalho do arquivo, nunca da data da partida"
+rodada = "Rótulo da fase como publicado, ex. 'Matchday 1', '1° Semestre, Matchday 3'"
+penaltis = "Placar da disputa de pênaltis, formato M-V. Nunca entra na contagem de gols"
+aproveitamento = "pontos / (jogos * 3), decimal com 4 casas. Zero jogos resulta em nulo"

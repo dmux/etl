@@ -1,0 +1,123 @@
+[project]
+name = "pipeline"
+version = "0.1.0"
+description = "Base para pipelines de dados guiados por spec — SDD, hexagonal, PySpark + Delta sobre minilake"
+readme = "README.md"
+authors = [{ name = "Rafael Sales", email = "rafael.sales@gmail.com" }]
+requires-python = ">=3.11"
+dependencies = [
+    "pyspark==3.5.3",
+    "delta-spark==3.2.1",
+    "pydantic>=2.0",
+    "click>=8.1",
+]
+
+[tool.uv]
+# Ainda não há código: `src/<pacote>/` nasce na primeira spec implementada. Até lá o projeto
+# não é empacotável, e tentar buildá-lo faria todo `uv run` falhar com erro de build.
+# Ao criar o pacote, troque para `package = true` e descomente o bloco abaixo.
+package = false
+
+# [project.scripts]
+# pipeline = "pipeline.cli.main:cli"
+#
+# [build-system]
+# requires = ["uv_build>=0.8.6,<0.9.0"]
+# build-backend = "uv_build"
+#
+# [tool.uv.build-backend]
+# module-name = "pipeline"
+# module-root = "src"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pytest-xdist>=3.5",
+    "ruff>=0.16.0",
+    "mypy>=1.11",
+    "pre-commit>=4.0",
+]
+
+# --------------------------------------------------------------------------
+# pytest
+# --------------------------------------------------------------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-v --tb=short --strict-markers"
+markers = [
+    "unit: domínio e aplicação, sem Spark — rápido",
+    "integration: exige uma SparkSession local",
+    "e2e: exige o minilake rodando em http://localhost:8000",
+]
+
+# --------------------------------------------------------------------------
+# coverage — o gate de qualidade do projeto
+# --------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["src/pipeline"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "\\.\\.\\.",
+]
+omit = [
+    # entrypoint: só faz wiring, coberto pelos testes e2e
+    "src/pipeline/cli/*",
+    "*/__main__.py",
+]
+
+# --------------------------------------------------------------------------
+# ruff
+# --------------------------------------------------------------------------
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "W",    # warnings
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # bugbear
+    "SIM",  # simplify — sustenta o "clean code" das steering rules
+    "C90",  # mccabe — complexidade
+    "N",    # naming
+    "RUF",
+]
+ignore = [
+    "E501",  # comprimento de linha — o formatter cuida
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 8
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pipeline"]
+
+# --------------------------------------------------------------------------
+# mypy
+# --------------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+files = ["src"]
+strict = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["pyspark.*", "delta.*"]
+ignore_missing_imports = true

@@ -1,0 +1,124 @@
+# Pre-commit deste projeto: higiene padrão + ruff + guardas específicos de pipeline Spark.
+#
+# Os guardas locais em tools/precommit/guardas_spark.py existem porque cada uma dessas regras,
+# se violada, só falharia em runtime — normalmente dentro de um container Spark, com stack
+# trace inútil. Aqui falha no commit, com a explicação junto.
+default_language_version:
+  python: python3.11
+
+repos:
+  # ---------------------------------------------------------------- higiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^south-america/
+      - id: end-of-file-fixer
+        exclude: ^south-america/
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+        exclude: ^south-america/
+      - id: detect-private-key
+
+  # ------------------------------------------------------------------ ruff
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.1
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+        files: ^(src|tests|tools)/
+      - id: ruff-format
+        files: ^(src|tests|tools)/
+
+  # ------------------------------------------------------------------ mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.18.2
+    hooks:
+      - id: mypy
+        files: ^src/
+        additional_dependencies: ["pydantic>=2.0"]
+        args: ["--strict", "--ignore-missing-imports"]
+
+  # ------------------------------------------- guardas de pipeline Spark
+  - repo: local
+    hooks:
+      - id: hexagonal-imports
+        name: "arquitetura: domain/ e application/ sem framework"
+        description: A regra de dependência que sustenta a hexagonal — sem ela o domínio vira refém do Spark.
+        entry: uv run python tools/precommit/guardas_spark.py --guarda hexagonal-imports
+        language: system
+        types: [python]
+        files: ^src/
+
+      - id: spark-no-driver-collect
+        name: "spark: sem collect/toPandas/count fora de infrastructure"
+        description: Materializar no driver causa OOM que só aparece em produção.
+        entry: uv run python tools/precommit/guardas_spark.py --guarda spark-no-driver-collect
+        language: system
+        types: [python]
+        files: ^src/
+
+      - id: spark-no-print
+        name: "spark: sem print() em src/"
+        description: Em job Spark o stdout é o canal de saída capturado — use logging.
+        entry: uv run python tools/precommit/guardas_spark.py --guarda spark-no-print
+        language: system
+        types: [python]
+        files: ^src/
+
+      - id: spark-delta-config
+        name: "spark: SparkSession com as configs do Delta"
+        description: Sem spark.sql.extensions e spark.sql.catalog.spark_catalog o job falha com ClassNotFoundException.
+        entry: uv run python tools/precommit/guardas_spark.py --guarda spark-delta-config
+        language: system
+        types: [python]
+        files: ^(src|tests)/
+
+      - id: minilake-sql-dialect
+        name: "minilake: SQL compatível com DuckDB"
+        description: MERGE INTO, OPTIMIZE, VACUUM, explode, date_format e afins não existem no DuckDB.
+        entry: uv run python tools/precommit/guardas_spark.py --guarda minilake-sql-dialect
+        language: system
+        types_or: [python, sql]
+        files: ^(src|tests)/
+
+      - id: spark-no-select-star
+        name: "spark: sem select('*')"
+        description: '"*" esconde mudança de schema até quebrar em produção.'
+        entry: uv run python tools/precommit/guardas_spark.py --guarda spark-no-select-star
+        language: system
+        types_or: [python, sql]
+        files: ^src/
+
+      - id: glossario
+        name: "glossário: sem sinônimo divergente"
+        description: home/away/team/season/match criam duas linguagens para o mesmo conceito.
+        entry: uv run python tools/precommit/guardas_spark.py --guarda glossario
+        language: system
+        types: [python]
+        files: ^(src|tests)/
+
+      - id: sem-excecao-engolida
+        name: "erro: sem except: pass"
+        description: Silenciar exceção esconde perda de dado — o pior bug possível num ETL.
+        entry: uv run python tools/precommit/guardas_spark.py --guarda sem-excecao-engolida
+        language: system
+        types: [python]
+        files: ^src/
+
+  # ------------------------------------------------ gate de cobertura (push)
+  - repo: local
+    hooks:
+      - id: cobertura-95
+        name: "gate: cobertura >= 95%"
+        description: Lento demais para todo commit — roda no push.
+        entry: uv run pytest -m "not e2e" --cov --cov-report=term-missing
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
