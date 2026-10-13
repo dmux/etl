@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [{ name = "Rafael Sales", email = "rafael.sales@gmail.com" }]
 requires-python = ">=3.11"
 dependencies = [
-    "pyspark==3.5.3",
+    "pyspark==3.5.8",
     "delta-spark==3.2.1",
     "pydantic>=2.0",
     "click>=8.1",
