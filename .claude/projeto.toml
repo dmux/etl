@@ -10,15 +10,18 @@ nome = "etl"
 # Nome do pacote Python em src/. Precisa bater com [tool.coverage] e [tool.ruff.lint.isort]
 # no pyproject.toml.
 pacote = "pipeline"
-descricao = "Pipeline de dados desenvolvido por specs, arquitetura hexagonal, PySpark + Delta sobre minilake"
+descricao = "Pipeline de dados desenvolvido por specs, arquitetura hexagonal, jobs AWS Glue (PySpark + Iceberg) sobre ministack"
 
 [dados]
-# Catálogo no minilake onde as tabelas deste projeto vivem.
-catalogo = "meu_catalogo"
-# Camadas do medalhão, na ordem. Cada uma vira um schema no catálogo.
+# Prefixo dos bancos no Glue Data Catalog: cada camada vira o banco `<prefixo>_<camada>`.
+# O Glue não aceita ponto em nome de banco, por isso prefixo e não catálogo de três partes.
+prefixo = "meu_projeto"
+# Camadas do medalhão, na ordem.
 camadas = ["bronze", "silver", "gold"]
-# Raiz dos arquivos Delta no volume compartilhado. Sempre sob /data/.
-raiz_delta = "/data/delta"
+# Bucket do S3 (no ministack) que guarda fonte, código do job e tabelas.
+bucket = "meu-projeto-lake"
+# Warehouse do catálogo Iceberg `iceberg`. Use s3a://: é o esquema que o Spark do ministack lê.
+warehouse = "s3a://meu-projeto-lake/warehouse"
 # Colunas de particionamento padrão. Escolha baixa cardinalidade e alto uso em filtro.
 # Deixe vazio se ainda não souber — o design da primeira spec decide.
 particionamento = []
@@ -26,7 +29,7 @@ particionamento = []
 [fontes]
 # Diretórios de dado bruto. São tratados como IMUTÁVEIS: um hook de PreToolUse bloqueia
 # qualquer escrita neles. Aceita glob. Vazio = nenhuma proteção.
-somente_leitura = ["south-america/"]
+somente_leitura = ["south-america/", "examples/futebol/south-america/"]
 
 [idioma]
 # Idioma dos identificadores de domínio no código: "pt" ou "en".

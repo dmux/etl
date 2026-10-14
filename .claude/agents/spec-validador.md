@@ -31,7 +31,7 @@ Você não conserta nada. Você constata, com evidência, e emite um veredito.
    python tools/precommit/guardas_spark.py --guarda hexagonal-imports $(git ls-files 'src/**/*.py')
    python tools/precommit/guardas_spark.py --guarda spark-no-print $(git ls-files 'src/**/*.py')
    python tools/precommit/guardas_spark.py --guarda spark-no-driver-collect $(git ls-files 'src/**/*.py')
-   python tools/precommit/guardas_spark.py --guarda minilake-sql-dialect $(git ls-files 'src/**/*.py' 'src/**/*.sql')
+   python tools/precommit/guardas_spark.py --guarda athena-sql-dialect $(git ls-files 'src/**/*.sql')
    python tools/precommit/guardas_spark.py --guarda sem-excecao-engolida $(git ls-files 'src/**/*.py')
    ```
 5. Confira sinônimo fora do glossário do projeto:
@@ -85,7 +85,7 @@ VERDICT: PASS
 - qualquer item do gate de qualidade falhou;
 - algum `REQ-###` não tem nenhum teste que o cite;
 - há violação estrutural (import proibido no domínio, `print` em `src/`, `collect` fora de
-  infraestrutura, SQL incompatível com DuckDB, `except: pass`);
+  infraestrutura, SQL do Athena incompatível com o DuckDB do ministack, `except: pass`);
 - a implementação diverge do design sem justificativa registrada;
 - há tarefa em `tasks.md` ainda aberta.
 

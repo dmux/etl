@@ -22,7 +22,7 @@ Nesta ordem de precedência:
 
 1. **O schema que já existe.** Se a tabela de destino já está no catálogo, os nomes de coluna
    dela mandam. O código se adapta ao schema, não o contrário. Confirme com
-   `mcp__minilake__describe_table` antes de inventar nome.
+   `aws glue get-table` no ministack antes de inventar nome.
 2. **O vocabulário de quem usa o dado.** O termo que o consumidor usa na pergunta dele.
 3. **Só então**, uma decisão sua — que vira ADR na spec.
 

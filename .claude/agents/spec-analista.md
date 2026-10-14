@@ -22,7 +22,7 @@ Você não decide *como* construir. Você define *o que* o sistema faz e *como s
 5. Explore o que já existe: `ls specs/` e leia os `requirements.md` das specs anteriores, para
    não redefinir conceito já definido nem contradizer decisão tomada.
 6. Se a feature mexe com dado, **olhe o dado**. Use `Bash` com `grep`/`head` nos diretórios de
-   `[fontes] somente_leitura`, ou `mcp__minilake__run_sql` nas tabelas já existentes, para
+   `[fontes] somente_leitura`, ou uma leitura pelo Spark nas tabelas já existentes, para
    confirmar suposições. Requisito baseado em suposição sobre o dado é requisito errado.
 7. Escreva `specs/NNN-<nome>/requirements.md`.
 
@@ -60,7 +60,7 @@ Como <papel>, quero <capacidade>, para que <valor>.
 
 ## Princípios
 
-- **Nunca escreva solução técnica.** "Deve gravar em Delta particionado" é design. O requisito
+- **Nunca escreva solução técnica.** "Deve gravar em Iceberg particionado" é design. O requisito
   equivalente é "reprocessar a mesma janela não pode duplicar registros".
 - **Todo requisito precisa do caminho triste.** Um `SE ... ENTÃO` para arquivo malformado,
   campo ausente, valor fora de domínio. Requisito só com caminho feliz produz pipeline que

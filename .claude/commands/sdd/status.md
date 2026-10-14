@@ -42,7 +42,7 @@ Specs
   002-agregados-gold    req ✓  design -  tasks -   —
 
 Ativa: 001-ingestao-bronze
-  T-05  Adaptador de escrita Delta      REQ-006, REQ-007
+  T-05  Adaptador de escrita Iceberg    REQ-006, REQ-007
   T-06  Registro da tabela EXTERNAL     REQ-008
   T-07  Wiring do CLI                   REQ-001
 

@@ -1,15 +1,15 @@
 [project]
 name = "pipeline"
 version = "0.1.0"
-description = "Base para pipelines de dados guiados por spec — SDD, hexagonal, PySpark + Delta sobre minilake"
+description = "Base para pipelines de dados guiados por spec — SDD, hexagonal, jobs AWS Glue (PySpark + Iceberg) sobre ministack"
 readme = "README.md"
 authors = [{ name = "Rafael Sales", email = "rafael.sales@gmail.com" }]
-requires-python = ">=3.11"
+# O job roda no Python 3.10 da imagem do Glue 4.0.
+requires-python = ">=3.10"
 dependencies = [
-    "pyspark==3.5.3",
-    "delta-spark==3.2.1",
+    # A versão do Spark do Glue 4.0. No host serve para tipos e mocks; o job usa o da imagem.
+    "pyspark==3.3.0",
     "pydantic>=2.0",
-    "click>=8.1",
 ]
 
 [tool.uv]
@@ -49,7 +49,7 @@ addopts = "-v --tb=short --strict-markers"
 markers = [
     "unit: domínio e aplicação, sem Spark — rápido",
     "integration: exige uma SparkSession local",
-    "e2e: exige o minilake rodando em http://localhost:8000",
+    "e2e: exige o ministack rodando em http://localhost:4566",
 ]
 
 # --------------------------------------------------------------------------
@@ -80,7 +80,7 @@ omit = [
 # --------------------------------------------------------------------------
 [tool.ruff]
 line-length = 120
-target-version = "py311"
+target-version = "py310"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
@@ -113,11 +113,11 @@ known-first-party = ["pipeline"]
 # mypy
 # --------------------------------------------------------------------------
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.10"
 files = ["src"]
 strict = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-module = ["pyspark.*", "delta.*"]
+module = ["pyspark.*", "awsglue.*", "boto3.*", "botocore.*"]
 ignore_missing_imports = true

@@ -28,9 +28,9 @@ De dentro para fora, sempre. É o que permite testar cada etapa sem mock desnece
 3. aplicação: portas         (Protocol)
 4. aplicação: caso de uso    (orquestração, testada com fakes)
 5. infraestrutura: fakes     (adaptador em memória)
-6. infraestrutura: reais     (Spark, Delta, filesystem, catálogo)
+6. infraestrutura: reais     (Spark, Iceberg, S3, Glue Data Catalog)
 7. cli: wiring
-8. e2e contra o minilake
+8. e2e contra o ministack
 ```
 
 O fake vem **antes** do adaptador real: ele permite fechar o caso de uso com teste rápido antes

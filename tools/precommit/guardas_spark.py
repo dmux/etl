@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guardas de pre-commit específicos para pipelines Spark sobre o minilake.
+"""Guardas de pre-commit específicos para jobs AWS Glue (PySpark + Iceberg) sobre o ministack.
 
 Cada guarda codifica uma regra das steering rules que, se violada, só falharia em runtime —
 normalmente dentro de um container, com stack trace inútil. Aqui falha no commit.
@@ -21,22 +21,17 @@ from pathlib import Path
 
 # Camadas que a regra de dependência protege (ver .claude/steering/estrutura.md).
 CAMADAS_PURAS = ("domain", "application")
-FRAMEWORKS_PROIBIDOS = ("pyspark", "delta", "databricks")
+FRAMEWORKS_PROIBIDOS = ("pyspark", "awsglue", "boto3", "pyiceberg")
 
-# As duas configs sem as quais a sessão Spark quebra no minilake.
-CONFIGS_DELTA = (
-    "spark.sql.extensions",
-    "spark.sql.catalog.spark_catalog",
-)
-
-# Construções de Spark SQL que o DuckDB não entende (ver minilake://sql-dialect).
+# Construções que o Athena do ministack não entende: ele roda em DuckDB, não em Trino.
+# Vale para arquivos .sql de consulta; o Spark SQL dentro do job Glue é Spark de verdade.
 SQL_INCOMPATIVEL = {
-    r"\bMERGE\s+INTO\b": "MERGE INTO não existe no DuckDB — leia, calcule e reescreva a partição",
+    r"\bMERGE\s+INTO\b": "MERGE INTO não existe no Athena do ministack (DuckDB)",
     r"\bLATERAL\s+VIEW\b": "LATERAL VIEW não existe no DuckDB — use unnest()",
-    r"\bOPTIMIZE\b": "OPTIMIZE não é emulado pelo minilake",
-    r"\bVACUUM\b": "VACUUM não é emulado pelo minilake",
-    r"\bDESCRIBE\s+HISTORY\b": "DESCRIBE HISTORY não é emulado pelo minilake",
-    r"\bVERSION\s+AS\s+OF\b": "time travel não é emulado pelo minilake",
+    r"\bOPTIMIZE\b": "OPTIMIZE não existe no Athena do ministack (DuckDB)",
+    r"\bVACUUM\b": "VACUUM não existe no Athena do ministack (DuckDB)",
+    r"\bDESCRIBE\s+HISTORY\b": "DESCRIBE HISTORY não existe no Athena do ministack (DuckDB)",
+    r"\bVERSION\s+AS\s+OF\b": "time travel não existe no Athena do ministack (DuckDB)",
     r"\bexplode\s*\(": "explode() não existe no DuckDB — use unnest()",
     r"\bdate_format\s*\(": "date_format() não existe no DuckDB — use strftime()",
     r"\bfrom_unixtime\s*\(": "from_unixtime() não existe no DuckDB — use to_timestamp()",
@@ -198,40 +193,36 @@ def guarda_sem_collect(arquivos: Iterable[Path]) -> list[Achado]:
     return achados
 
 
-def guarda_configs_delta(arquivos: Iterable[Path]) -> list[Achado]:
-    """Quem constrói SparkSession declara as duas configs do Delta."""
+def guarda_sessao_glue(arquivos: Iterable[Path]) -> list[Achado]:
+    """Em job Glue a sessão vem do GlueContext; `SparkSession.builder` perde a configuração do Glue."""
     achados: list[Achado] = []
     for arquivo in arquivos:
+        if not _e_producao(arquivo):
+            continue
         try:
-            texto = arquivo.read_text(encoding="utf-8")
+            linhas = arquivo.read_text(encoding="utf-8").splitlines()
         except (OSError, UnicodeDecodeError):
             continue
-        if "SparkSession.builder" not in texto:
-            continue
-        faltando = [config for config in CONFIGS_DELTA if config not in texto]
-        if faltando:
-            linha = next(
-                (i for i, conteudo in enumerate(texto.splitlines(), 1) if "SparkSession.builder" in conteudo),
-                1,
-            )
-            achados.append(
-                Achado(
-                    arquivo,
-                    linha,
-                    "spark-delta-config",
-                    "SparkSession sem as configs do Delta: "
-                    + ", ".join(faltando)
-                    + ". Sem elas o job falha com ClassNotFoundException. "
-                    "Template em .claude/steering/convencoes-spark.md.",
+        for numero, linha in enumerate(linhas, 1):
+            if "SparkSession.builder" in linha and not linha.lstrip().startswith("#"):
+                achados.append(
+                    Achado(
+                        arquivo,
+                        numero,
+                        "glue-sessao",
+                        "use GlueContext(SparkContext.getOrCreate()).spark_session. "
+                        "Ver .claude/steering/convencoes-spark.md.",
+                    )
                 )
-            )
     return achados
 
 
 def guarda_dialeto_sql(arquivos: Iterable[Path]) -> list[Achado]:
-    """Construções de Spark SQL que o DuckDB do minilake não entende."""
+    """Construções que o Athena do ministack (DuckDB) não entende, em arquivos .sql."""
     achados: list[Achado] = []
     for arquivo in arquivos:
+        if arquivo.suffix != ".sql":
+            continue
         try:
             linhas = arquivo.read_text(encoding="utf-8").splitlines()
         except (OSError, UnicodeDecodeError):
@@ -241,7 +232,7 @@ def guarda_dialeto_sql(arquivos: Iterable[Path]) -> list[Achado]:
                 continue
             for padrao, motivo in SQL_INCOMPATIVEL.items():
                 if re.search(padrao, linha, re.IGNORECASE):
-                    achados.append(Achado(arquivo, numero, "minilake-sql-dialect", motivo))
+                    achados.append(Achado(arquivo, numero, "athena-sql-dialect", motivo))
     return achados
 
 
@@ -283,9 +274,9 @@ def _nomes_declarados(no: ast.AST) -> list[tuple[str, int]]:
     return []
 
 
-def guarda_glossario(arquivos: Iterable[Path]) -> list[Achado]:
+def guarda_glossario(arquivos: Iterable[Path], config: Path = CONFIG_GLOSSARIO) -> list[Achado]:
     """Sinônimos divergentes do glossário do projeto em nomes de identificador."""
-    sinonimos = carregar_sinonimos()
+    sinonimos = carregar_sinonimos(config)
     if not sinonimos:
         return []
     achados: list[Achado] = []
@@ -295,11 +286,11 @@ def guarda_glossario(arquivos: Iterable[Path]) -> list[Achado]:
         arvore = _parsear(arquivo)
         if arvore is None:
             continue
-        achados.extend(_sinonimos_no_arquivo(arquivo, arvore, sinonimos))
+        achados.extend(_sinonimos_no_arquivo(arquivo, arvore, sinonimos, config))
     return achados
 
 
-def _sinonimos_no_arquivo(arquivo: Path, arvore: ast.Module, sinonimos: dict[str, str]) -> list[Achado]:
+def _sinonimos_no_arquivo(arquivo: Path, arvore: ast.Module, sinonimos: dict[str, str], config: Path) -> list[Achado]:
     """Identificadores do arquivo que usam um termo proibido pelo glossário."""
     achados: list[Achado] = []
     for no in ast.walk(arvore):
@@ -313,7 +304,7 @@ def _sinonimos_no_arquivo(arquivo: Path, arvore: ast.Module, sinonimos: dict[str
                         linha,
                         "glossario",
                         f"'{termo}' em '{nome}' — o glossário do projeto manda usar "
-                        f"'{sinonimos[termo]}'. Ver .claude/glossario.toml.",
+                        f"'{sinonimos[termo]}'. Ver {config}.",
                     )
                 )
     return achados
@@ -345,8 +336,8 @@ GUARDAS = {
     "hexagonal-imports": guarda_imports_hexagonais,
     "spark-no-print": guarda_sem_print,
     "spark-no-driver-collect": guarda_sem_collect,
-    "spark-delta-config": guarda_configs_delta,
-    "minilake-sql-dialect": guarda_dialeto_sql,
+    "glue-sessao": guarda_sessao_glue,
+    "athena-sql-dialect": guarda_dialeto_sql,
     "spark-no-select-star": guarda_select_estrela,
     "glossario": guarda_glossario,
     "sem-excecao-engolida": guarda_excecao_engolida,
@@ -356,10 +347,19 @@ GUARDAS = {
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--guarda", required=True, choices=sorted(GUARDAS))
+    parser.add_argument(
+        "--glossario",
+        type=Path,
+        default=CONFIG_GLOSSARIO,
+        help="glossário a usar na guarda `glossario`; útil quando o projeto não está na raiz do repositório",
+    )
     parser.add_argument("arquivos", nargs="*", type=Path)
     args = parser.parse_args(argv)
 
-    achados = GUARDAS[args.guarda](args.arquivos)
+    if args.guarda == "glossario":
+        achados = guarda_glossario(args.arquivos, args.glossario)
+    else:
+        achados = GUARDAS[args.guarda](args.arquivos)
     for achado in achados:
         print(achado, file=sys.stderr)
     return 1 if achados else 0

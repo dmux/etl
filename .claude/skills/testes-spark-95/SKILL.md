@@ -20,7 +20,7 @@ Mova a regra para `domain/` e teste lá.
 |---|---|---|---|---|
 | `tests/unit/` | `unit` | domínio e aplicação, com fakes | ms | ~90% |
 | `tests/integration/` | `integration` | adaptador Spark real, `local[2]` | segundos | complementar |
-| `tests/e2e/` | `e2e` | pipeline contra o minilake | minutos | fumaça |
+| `tests/e2e/` | `e2e` | job Glue contra o ministack | minutos | fumaça |
 
 Java **não** está instalado no host: os testes `integration` são pulados por `skipif` e não
 podem ser contados no gate. O adaptador Spark precisa de cobertura por **mock**, no `unit`.
@@ -62,39 +62,38 @@ def test_escritor_memoria_satisfaz_a_porta() -> None:
 
 ## Testando o adaptador Spark sem JVM
 
-Mock do builder, e asserção sobre as chamadas — é isso que garante que as configs obrigatórias
-do Delta e o particionamento não sejam esquecidos:
+Mock da sessão, e asserção sobre as chamadas — é isso que garante que a escrita idempotente e o
+nome qualificado da tabela não sejam esquecidos:
 
 ```python
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 
-@patch("<pacote>.infrastructure.escritor_delta_spark.SparkSession")
-def test_escritor_configura_as_extensoes_delta(sessao_mock: MagicMock) -> None:
-    """REQ-006: a sessão Spark sempre declara as duas configs do Delta."""
-    builder = sessao_mock.builder
-    builder.config.return_value = builder
+def test_escritor_substitui_so_as_particoes_reprocessadas() -> None:
+    """REQ-006: reprocessar não apaga partições que não vieram nesta execução."""
+    spark = MagicMock()
+    escritor = EscritorIcebergSpark(spark, banco="<prefixo>_bronze")
 
-    EscritorDeltaSpark().escrever([UM_REGISTRO], DESTINO)
+    escritor.substituir_particoes([UM_REGISTRO])
 
-    configuradas = {chamada.args[0] for chamada in builder.config.call_args_list}
-    assert "spark.sql.extensions" in configuradas
-    assert "spark.sql.catalog.spark_catalog" in configuradas
+    spark.createDataFrame.return_value.writeTo.assert_called_once_with("iceberg.<prefixo>_bronze.<tabela>")
+    spark.createDataFrame.return_value.writeTo.return_value.overwritePartitions.assert_called_once_with()
 ```
+
+`awsglue` não existe no host. Para testar o wiring que cria o `GlueContext`, injete módulos falsos
+em `sys.modules` com `monkeypatch.setitem`, e importe `awsglue` só dentro da função que o usa:
 
 ```python
-@patch("<pacote>.infrastructure.escritor_delta_spark.SparkSession")
-def test_escritor_particiona_pelas_colunas_configuradas(sessao_mock: MagicMock) -> None:
-    """REQ-007: a escrita é particionada pelas colunas de [dados] particionamento."""
-    writer = sessao_mock.builder.getOrCreate.return_value.createDataFrame.return_value.write
-    writer.format.return_value = writer
-    writer.mode.return_value = writer
-    writer.partitionBy.return_value = writer
-
-    EscritorDeltaSpark().escrever([UM_REGISTRO], DESTINO)
-
-    writer.partitionBy.assert_called_once_with(*PARTICIONAMENTO)
+def test_sessao_vem_do_glue_context(monkeypatch: pytest.MonkeyPatch) -> None:
+    """REQ-009: a sessão é a do GlueContext, com a configuração que o Glue injeta."""
+    contexto = MagicMock()
+    monkeypatch.setitem(sys.modules, "awsglue.context", MagicMock(GlueContext=MagicMock(return_value=contexto)))
+    monkeypatch.setitem(sys.modules, "pyspark.context", MagicMock())
+    assert criar_sessao_glue() is contexto.spark_session
 ```
+
+Clientes `boto3` (S3, Glue) entram por injeção no construtor do adaptador; no teste, um fake
+simples com os métodos usados.
 
 ## Fixture de Spark real, quando houver Java
 
@@ -121,9 +120,8 @@ def spark():
         .appName("testes")
         .config("spark.sql.shuffle.partitions", "2")
         .config("spark.ui.enabled", "false")
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-        .config("spark.sql.catalog.spark_catalog",
-                "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+        # Iceberg local precisa do iceberg-spark-runtime-3.3_2.12 no classpath
+        # (spark.jars.packages); sem rede, o teste é pulado.
         .getOrCreate()
     )
     sessao.sparkContext.setLogLevel("WARN")

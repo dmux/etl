@@ -17,7 +17,7 @@ Revisa as regras que governam todo o desenvolvimento deste repositório.
 | `.claude/steering/tech.md` | stack fechada e comandos | sempre |
 | `.claude/steering/estrutura.md` | layout hexagonal e regra de dependência | sempre |
 | `.claude/steering/qualidade.md` | gate, clean code, DRY, proibições | sempre |
-| `.claude/steering/convencoes-spark.md` | minilake, DuckDB, Delta | skill `minilake-spark` |
+| `.claude/steering/convencoes-spark.md` | Glue 4.0, ministack, Iceberg | skill `glue-ministack` |
 | `.claude/steering/glossario-dados.md` | linguagem ubíqua e nomes de coluna | skill `glossario-dados` |
 
 As cinco primeiras são importadas pelo `CLAUDE.md` e ficam sempre em contexto — por isso
@@ -33,10 +33,10 @@ precisam ser enxutas. As duas últimas são grandes e carregam sob demanda.
 3. **Verifique a regra contra a realidade.** Steering desatualizada é pior que ausente, porque
    é obedecida. Conferências úteis:
    - `tech.md`: as versões batem com `pyproject.toml`?
-   - `glossario-dados.md`: os nomes de coluna batem com o schema real no minilake
-     (`mcp__minilake__describe_table`)? Os domínios de valor batem com o dado real? A tabela
+   - `glossario-dados.md`: os nomes de coluna batem com o schema real das tabelas
+     (`aws glue get-table` no ministack)? Os domínios de valor batem com o dado real? A tabela
      de termos proibidos está em sincronia com `[sinonimos]` de `.claude/glossario.toml`?
-   - `convencoes-spark.md`: bate com `minilake://sql-dialect` e `minilake://pyspark-guide`?
+   - `convencoes-spark.md`: bate com o que um job de sonda no ministack confirma?
    - `estrutura.md`: o layout descrito bate com `src/`?
    - `produto.md` e `glossario-dados.md`: ainda têm placeholders `<...>` do template?
 

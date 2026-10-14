@@ -24,7 +24,7 @@ uma é fixo, independente do domínio:
 | **silver** | limpo, tipado, entidades resolvidas e deduplicadas | grão declarado e estável; sem duplicata |
 | **gold** | agregados prontos para consumo | derivada apenas de silver, nunca de bronze |
 
-Cada camada é um schema no catálogo declarado em `[dados] catalogo`. Uma camada só lê da camada
+Cada camada é um banco do Glue Data Catalog, `<[dados] prefixo>_<camada>`. Uma camada só lê da camada
 imediatamente anterior — nunca pula, nunca lê de si mesma.
 
 ## Escopo

@@ -15,7 +15,7 @@ que "já que estou aqui" seria fácil, não antecipa requisito futuro.
 
 1. Leia a tarefa em `specs/NNN-<nome>/tasks.md` e os `REQ-###` que ela declara atender, em
    `requirements.md`. Leia também a parte relevante do `design.md`.
-2. Carregue as skills que o assunto pedir: `testes-spark-95` sempre; `minilake-spark` se tocar
+2. Carregue as skills que o assunto pedir: `testes-spark-95` sempre; `glue-ministack` se tocar
    Spark ou SQL; a skill de formato da origem, se houver e a tarefa tocar parsing;
    `glossario-dados` ao nomear qualquer coisa.
 3. Marque a tarefa como `[~]` em `tasks.md`.
@@ -61,8 +61,8 @@ código — resolva antes de marcar a tarefa como concluída. Nunca ajuste o `fa
   usuário em vez de fazer.
 - **Se falta requisito, pare e avise.** Não invente comportamento no meio da implementação —
   isso é a fase de requisitos vazando para cá. Requisito novo volta ao gate.
-- **A regra de dependência é absoluta.** `domain/` não importa `pyspark`, `delta`,
-  `databricks`, nem as camadas de fora. Precisou? O desenho está errado; converse antes de
+- **A regra de dependência é absoluta.** `domain/` não importa `pyspark`, `awsglue`,
+  `boto3`, nem as camadas de fora. Precisou? O desenho está errado; converse antes de
   quebrar a regra.
 - **Limites de clean code:** função ≤ 20 linhas, complexidade ≤ 8, ≤ 4 parâmetros, sem flag
   booleana que muda comportamento, sem `if` aninhado além de dois níveis.

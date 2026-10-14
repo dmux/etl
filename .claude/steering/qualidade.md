@@ -32,7 +32,7 @@ Se para testar uma regra você precisou de uma `SparkSession`, a regra está na 
   `test_registro_sem_data_vira_rejeitado`, não `test_parse_1`.
 - Um `assert` conceitual por teste. Se precisa de cinco asserts sem relação, são cinco testes.
 - Fake em memória > mock, quando a porta permite. Mock só para o que é caro ou externo
-  (SparkSession, chamada HTTP ao minilake).
+  (SparkSession, GlueContext, chamadas ao S3 e ao Glue).
 - Casos de borda são obrigatórios, não bônus: entrada vazia, campo ausente, valor fora de
   domínio, arquivo malformado, encoding.
 

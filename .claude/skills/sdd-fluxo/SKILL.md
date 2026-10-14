@@ -34,7 +34,7 @@ done
 Delega ao subagente `spec-analista`. Produz `specs/NNN-<nome>/requirements.md` com user stories
 e critérios de aceitação em **EARS**. Responde *o que* e *como se prova*, nunca *como fazer*.
 
-Erro comum: escrever solução técnica no requisito. "O sistema deve usar Delta particionado por
+Erro comum: escrever solução técnica no requisito. "O sistema deve usar Iceberg particionado por
 data" é design, não requisito. O requisito é "reprocessar a mesma janela não deve duplicar
 registros".
 

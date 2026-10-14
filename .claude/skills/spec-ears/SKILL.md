@@ -58,7 +58,7 @@ Todo critério precisa passar nestes cinco testes:
    com o motivo e continuar processando as demais" é.
 2. **Um comportamento.** Um critério, uma asserção. Se tem "e" ligando duas respostas
    independentes, são dois critérios.
-3. **Sem solução técnica.** Nada de Delta, Spark, partição, DuckDB. Isso é `design.md`.
+3. **Sem solução técnica.** Nada de Iceberg, Spark, Glue, partição. Isso é `design.md`.
    O requisito diz *o que*, o design diz *como*.
 4. **Números concretos.** "Rápido" não é critério; "menos de 5 minutos para uma carga diária" é.
    Se você não sabe o número, essa é uma pergunta para o gate, não um "TBD" escondido.
@@ -89,7 +89,7 @@ Ruim, e por quê:
 | Escrito | Problema |
 |---|---|
 | "O parser deve ser tolerante a falhas" | não observável, não falseável |
-| "O sistema deve gravar em Delta particionado por data" | é design |
+| "O sistema deve gravar em Iceberg particionado por data" | é design |
 | "Deve processar rápido" | sem número |
 | "Deve tratar duplicata, campo ausente e encoding inválido" | três critérios num |
 

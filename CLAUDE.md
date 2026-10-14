@@ -1,8 +1,7 @@
 # Base para pipelines de dados guiados por spec
 
-Template de projeto: Spec-Driven Development no estilo AWS Kiro, arquitetura hexagonal, PySpark
-
-+ Delta sobre minilake, gate de 95% de cobertura. **Agnóstico de domínio** — o que é específico
+Template de projeto: Spec-Driven Development no estilo AWS Kiro, arquitetura hexagonal, jobs AWS
+Glue 4.0 (PySpark + Iceberg) sobre ministack, gate de 95% de cobertura. **Agnóstico de domínio** — o que é específico
 do projeto mora em `.claude/projeto.toml` e `.claude/glossario.toml`, e em nenhum outro lugar.
 
 As regras abaixo são carregadas em toda sessão e valem para qualquer trabalho neste repositório.
@@ -32,7 +31,7 @@ correspondentes quando o assunto aparece:
 
 | Arquivo | Skill que o carrega | Quando |
 | --- | --- | --- |
-| `.claude/steering/convencoes-spark.md` | `minilake-spark` | ao escrever qualquer PySpark ou SQL |
+| `.claude/steering/convencoes-spark.md` | `glue-ministack` | ao escrever qualquer PySpark, job Glue ou SQL |
 | `.claude/steering/glossario-dados.md` | `glossario-dados` | ao nomear entidades, colunas ou tabelas |
 
 Se você for escrever código Spark ou nomear um campo e essas skills não tiverem sido carregadas,

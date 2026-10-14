@@ -17,7 +17,7 @@ requisito volta para a fase anterior.
 
 1. Leia `specs/NNN-<nome>/requirements.md` inteiro. Ele é o contrato.
    Leia também `.claude/projeto.toml` — catálogo, camadas e particionamento saem de lá.
-2. Carregue as skills `design-hexagonal`, `minilake-spark` e `glossario-dados`.
+2. Carregue as skills `design-hexagonal`, `glue-ministack` e `glossario-dados`.
 3. Leia `.claude/steering/estrutura.md` — a regra de dependência entre camadas não é
    negociável.
 4. Explore o código existente antes de propor estrutura nova: liste `src/<pacote>/` e leia as
@@ -52,7 +52,7 @@ requisito volta para a fase anterior.
 | Coluna | Tipo | Nulo? | Origem |
 |---|---|---|---|
 
-**Caminho** `<raiz_delta>/<catalogo>/<camada>/<tabela>`, de `.claude/projeto.toml`
+**Tabela** `iceberg.<prefixo>_<camada>.<tabela>`, warehouse `s3a://<bucket>/warehouse`, de `.claude/projeto.toml`
 **Particionamento** · **Chave de idempotência**
 
 ## Tratamento de erro
@@ -83,8 +83,10 @@ requisito volta para a fase anterior.
   inventado; corte.
 - **ADR sem alternativa descartada não é ADR.** Sem isso, a discussão volta daqui a seis meses.
 - Dependência nova é ADR obrigatória. A stack em `tech.md` é fechada.
-- Respeite as restrições do minilake: sem `MERGE INTO`, sem DLT, escrita por path sob `/data/`,
-  SQL em dialeto DuckDB. Desenho que ignora isso só falha em runtime.
+- Respeite as restrições do Glue no ministack (`convencoes-spark.md`): sessão pelo `GlueContext`,
+  tabelas Iceberg no catálogo `hadoop` registradas no Glue Data Catalog, resultado pelo marcador
+  no log, conferência por Spark porque o Athena do ministack não lê Iceberg. Desenho que ignora
+  isso só falha em runtime.
 
 ## Ao terminar
 

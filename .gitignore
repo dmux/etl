@@ -37,3 +37,6 @@ derby.log
 
 # Claude Code — configuração pessoal, não do projeto
 .claude/settings.local.json
+
+# Fonte do exemplo futebol: clone fixo, fora do git (examples/futebol, ADR-002)
+/examples/futebol/south-america/

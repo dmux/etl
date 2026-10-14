@@ -1,7 +1,7 @@
 # Pre-commit deste projeto: higiene padrão + ruff + guardas específicos de pipeline Spark.
 #
 # Os guardas locais em tools/precommit/guardas_spark.py existem porque cada uma dessas regras,
-# se violada, só falharia em runtime — normalmente dentro de um container Spark, com stack
+# se violada, só falharia em runtime — normalmente dentro do container do job Glue, com stack
 # trace inútil. Aqui falha no commit, com a explicação junto.
 default_language_version:
   python: python3.11
@@ -72,20 +72,20 @@ repos:
         types: [python]
         files: ^src/
 
-      - id: spark-delta-config
-        name: "spark: SparkSession com as configs do Delta"
-        description: Sem spark.sql.extensions e spark.sql.catalog.spark_catalog o job falha com ClassNotFoundException.
-        entry: uv run python tools/precommit/guardas_spark.py --guarda spark-delta-config
+      - id: glue-sessao
+        name: "glue: sessão pelo GlueContext"
+        description: SparkSession.builder num job Glue perde a configuração que o Glue injeta.
+        entry: uv run python tools/precommit/guardas_spark.py --guarda glue-sessao
         language: system
         types: [python]
-        files: ^(src|tests)/
+        files: ^src/
 
-      - id: minilake-sql-dialect
-        name: "minilake: SQL compatível com DuckDB"
-        description: MERGE INTO, OPTIMIZE, VACUUM, explode, date_format e afins não existem no DuckDB.
-        entry: uv run python tools/precommit/guardas_spark.py --guarda minilake-sql-dialect
+      - id: athena-sql-dialect
+        name: "athena: SQL compatível com o DuckDB do ministack"
+        description: MERGE INTO, OPTIMIZE, VACUUM, explode, date_format e afins não existem no Athena do ministack.
+        entry: uv run python tools/precommit/guardas_spark.py --guarda athena-sql-dialect
         language: system
-        types_or: [python, sql]
+        types: [sql]
         files: ^(src|tests)/
 
       - id: spark-no-select-star

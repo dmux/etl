@@ -15,7 +15,7 @@ Spark?" Se a resposta é sim e não deveria ser, a lógica está na camada errad
 |---|---|---|
 | interpreta texto, calcula, valida, decide | `domain/` | nada além de pytest |
 | orquestra domínio + portas, sem saber quem implementa | `application/` | fakes em memória |
-| fala com Spark, Delta, filesystem, HTTP, minilake | `infrastructure/` | mock ou minilake real |
+| fala com Spark, Iceberg, S3, Glue, filesystem, HTTP | `infrastructure/` | mock ou ministack real |
 | lê argumento de linha de comando e monta o wiring | `cli/` | e2e |
 
 Regra de bolso: se o código menciona um nome de tecnologia, é infraestrutura. Se menciona um
@@ -34,7 +34,7 @@ from <pacote>.domain.modelos import Registro
 
 @runtime_checkable
 class EscritorTabelaPort(Protocol):
-    """Persiste registros num destino. Não sabe se é Delta, parquet ou memória."""
+    """Persiste registros num destino. Não sabe se é Iceberg, parquet ou memória."""
 
     def escrever(self, registros: Sequence[Registro], destino: str) -> int:
         """Retorna quantos registros foram gravados."""
@@ -45,7 +45,7 @@ O que uma porta nunca faz:
 
 - Aparecer `DataFrame`, `SparkSession`, `Row` ou qualquer tipo de framework na assinatura. Se
   aparece, o domínio passou a depender do Spark por via indireta.
-- Vazar detalhe do adaptador no nome — `EscritorTabelaPort`, não `EscritorDeltaPort`.
+- Vazar detalhe do adaptador no nome — `EscritorTabelaPort`, não `EscritorIcebergPort`.
 - Existir com um único adaptador. Toda porta tem o real e o fake de teste. Se você só consegue
   imaginar um adaptador, provavelmente é uma função de domínio, não uma porta.
 
@@ -71,7 +71,7 @@ O que uma porta nunca faz:
 <um bloco por adaptador: responsabilidade, dependências, o que pode falhar>
 
 ## Schema das tabelas
-<colunas, tipos, particionamento, caminho em /data/, chave de idempotência>
+<colunas, tipos, particionamento, tabela no catálogo, chave de idempotência>
 
 ## Tratamento de erro
 <o que é fatal, o que vira registro rejeitado, o que é log e segue>
@@ -101,7 +101,7 @@ Não merece: nome de variável, ordem de parâmetro, qualquer coisa já decidida
 | Sintoma | Diagnóstico |
 |---|---|
 | a porta recebe ou devolve `DataFrame` | o domínio acabou de virar refém do Spark |
-| o caso de uso instancia `EscritorDeltaSpark` direto | falta injeção; o wiring é do `cli/` |
+| o caso de uso instancia `EscritorIcebergSpark` direto | falta injeção; o wiring é do `cli/` |
 | há regra de negócio dentro do adaptador | mova para o domínio; adaptador só traduz |
 | o domínio tem `if config.modo == "spark"` | infraestrutura vazou; é escolha de adaptador |
 | uma porta com um adaptador só | provavelmente era uma função |
