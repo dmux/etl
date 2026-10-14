@@ -7,7 +7,8 @@
 
 Um pipeline que transforma os resultados de futebol sul-americano publicados pelo projeto
 [openfootball](https://github.com/openfootball/south-america) — arquivos de texto pensados para
-leitura humana — em tabelas Delta consultáveis por SQL.
+leitura humana — em tabelas Iceberg, escritas por um job AWS Glue e registradas no Glue Data
+Catalog.
 
 ## Para quem
 
@@ -23,7 +24,7 @@ pênaltis na Copa do Brasil.
 | **silver** | clubes deduplicados (`Grêmio FBPA` e `Grêmio Porto Alegre` viram o mesmo), datas completas, tipos corretos |
 | **gold** | classificação por temporada, desempenho como mandante, séries históricas |
 
-Catálogo `futebol`, um schema por camada.
+Um banco do Glue Data Catalog por camada: `futebol_bronze`, `futebol_silver`, `futebol_gold`.
 
 ## Escopo
 

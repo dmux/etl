@@ -8,8 +8,10 @@ Copie, adapte, ou ignore.
 ## `futebol/`
 
 Instância baseada nos dados do [openfootball](https://github.com/openfootball/south-america) —
-resultados de futebol sul-americano em arquivos de texto — carregados para o catálogo `futebol`
-do minilake.
+resultados de futebol sul-americano em arquivos de texto — carregados por um job AWS Glue em
+tabelas Iceberg no ministack. O pipeline é real e executa: `futebol/PROCESSO.md` conta como ele foi
+construído, fase a fase. Com o ministack de pé (`make up` na raiz), `/glue:executar examples/futebol`
+roda tudo e mostra o resultado de cada camada.
 
 ```
 futebol/

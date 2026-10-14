@@ -110,19 +110,25 @@ Todas confirmadas nos dados:
 | *(ausente)* | partida ainda não realizada | todos nulos · `status = 'agendada'` |
 | `5-3 pen. (1-1, 0-1)` | decidida nos pênaltis | `penaltis` = `5-3` · `gols_*` = 1,1 · `gols_*_ht` = 0,1 |
 | `1-4 pen. 1-4 a.e.t. (1-1, 0-0)` | prorrogação e pênaltis | `penaltis` = `1-4` · `gols_*` = 1,1 · `gols_*_ht` = 0,0 |
+| `5-3 pen. (0-0)` | pênaltis, sem primeiro tempo informado | `penaltis` = `5-3` · `gols_*` = 0,0 · `gols_*_ht` nulos |
+| `4-3 pen. 4-3 a.e.t. (0-0)` | idem, com `a.e.t.` repetindo os pênaltis | `penaltis` = `4-3` · `gols_*` = 0,0 · `gols_*_ht` nulos |
 | `3-0 [awarded]` | resultado atribuído (W.O.) | `gols_*` = 3,0 · `status = 'atribuida'` |
 | `[postponed]` | adiada | placares nulos · `status = 'adiada'` |
 | `[cancelled]` | cancelada | placares nulos · `status = 'cancelada'` |
 | `[abandoned]` | abandonada | placares nulos · `status = 'abandonada'` |
 
-Duas armadilhas nessa tabela:
+Três armadilhas nessa tabela:
 
 1. **Com pênaltis, o primeiro placar da linha é o dos pênaltis, não o do jogo.** Em
    `5-3 pen. (1-1, 0-1)`, o jogo terminou 1-1; `5-3` é a disputa. Ler `5-3` como gols é o erro
    mais caro possível aqui.
 2. **Quando há parênteses com dois placares separados por vírgula, o primeiro é o tempo normal
    e o segundo é o primeiro tempo** — nessa ordem. Com um placar só entre parênteses, ele é o
-   primeiro tempo.
+   primeiro tempo, **exceto quando a linha tem `pen.`**: aí ele é o placar do jogo, porque só há
+   pênaltis depois de empate. Confirmado em 6 linhas de `2025_brcup.txt`.
+3. **O placar marcado `a.e.t.` não é confiável.** Em 4 linhas de `2025_brcup.txt` ele repete o
+   placar dos pênaltis (`4-3 pen. 4-3 a.e.t.`), o que é impossível num jogo empatado. Use sempre
+   o placar entre parênteses.
 
 O sufixo `a.e.t.` (*after extra time*) indica prorrogação. Os `gols_*` já incluem a prorrogação;
 não existe campo separado para ela.
@@ -133,8 +139,8 @@ Testar as formas na ordem errada faz `5-3 pen. (1-1, 0-1)` casar com o padrão s
 dado errado sem erro nenhum. A ordem correta é da mais específica para a mais genérica:
 
 1. marcador `[...]` isolado → status especial, sem placar
-2. `N-N pen. N-N a.e.t. (N-N, N-N)` → pênaltis com prorrogação
-3. `N-N pen. (...)` → pênaltis
+2. `N-N pen. N-N a.e.t. (N-N[, N-N])` → pênaltis com prorrogação, um ou dois placares
+3. `N-N pen. (N-N[, N-N])` → pênaltis, um ou dois placares
 4. `N-N [awarded]` → resultado atribuído
 5. `N-N (N-N)` → final e primeiro tempo
 6. `N-N` → só final
@@ -161,6 +167,7 @@ melhor asserção de teste disponível para este formato, e vale para cada arqui
 
 Todo parser deste formato precisa cobrir, no mínimo: horário herdado por três partidas
 seguidas · data sem ano · virada de ano dentro da temporada · `0-0` sem primeiro tempo ·
-partida sem placar · pênaltis sem prorrogação · pênaltis com `a.e.t.` · cada um dos quatro
+partida sem placar · pênaltis sem prorrogação · pênaltis com `a.e.t.` · pênaltis com um placar só entre parênteses ·
+data cuja primeira partida não tem horário · cada um dos quatro
 marcadores `[...]` · `▪ Fase, Matchday N` composto · rodada sem número · clube com sufixo de UF ·
 clube com acento · arquivo vazio · linha truncada no meio · conferência do `# Matches N`.

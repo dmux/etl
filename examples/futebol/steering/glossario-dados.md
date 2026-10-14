@@ -6,7 +6,7 @@
 
 ## De onde vêm os nomes
 
-Do schema que já existe: `futebol.brasileirao.partidas` no minilake, colunas em português. O
+Do schema herdado de `futebol.brasileirao.partidas`, colunas em português. O
 código se adapta ao schema, não o contrário.
 
 ---
@@ -35,6 +35,7 @@ Um jogo entre dois clubes, em uma data, por uma competição.
 | `penaltis` | STRING | Placar da disputa de pênaltis, formato `M-V` | `5-3`; nulo quando não houve |
 | `status` | STRING | Situação da partida | ver *Status* |
 | `arquivo` | STRING | Arquivo de origem, relativo à raiz da fonte | `brazil/2025_br1.txt` |
+| `linha` | INT | Número da linha da partida no arquivo, a partir de 1. Serve para auditoria e desempate | ≥ 1 |
 
 **Invariantes**
 
@@ -69,6 +70,19 @@ camada **silver**, nunca da bronze.
 | `nome_bruto` | Nome exatamente como veio do arquivo, preservado para auditoria |
 | `uf` | Sigla do estado, quando o arquivo traz |
 
+### `Rejeitado`
+
+Uma linha, partida ou arquivo que o pipeline não aceitou, guardado com o motivo para que nada
+desapareça em silêncio. Existe uma tabela por camada: em bronze, o que não parseou; em silver, o
+que violou invariante ou era duplicata.
+
+| Coluna | Tipo | Definição |
+| --- | --- | --- |
+| `arquivo` | STRING | Arquivo de origem |
+| `linha` | INT | Linha no arquivo; nula quando o arquivo inteiro foi rejeitado |
+| `texto` | STRING | Conteúdo original, sem alteração |
+| `motivo` | STRING | Por que foi rejeitado, em uma frase |
+
 ---
 
 ## Métricas derivadas
@@ -77,6 +91,9 @@ Camada **gold**. Grão da classificação: uma linha por clube por temporada por
 
 | Métrica | Coluna | Fórmula | Caso de borda |
 | --- | --- | --- | --- |
+| Vitórias | `vitorias` | partidas contadas em `jogos` em que o clube marcou mais gols | — |
+| Empates | `empates` | partidas contadas em `jogos` com gols iguais | — |
+| Derrotas | `derrotas` | partidas contadas em `jogos` em que o clube marcou menos gols | — |
 | Pontos | `pontos` | `3 × vitorias + empates` | — |
 | Jogos | `jogos` | contagem de partidas com `status` ∈ (`realizada`, `atribuida`) | — |
 | Gols pró | `gols_pro` | gols marcados, somando mando e visita | — |

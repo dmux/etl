@@ -1,0 +1,82 @@
+[project]
+name = "etl-futebol"
+version = "0.1.0"
+description = "Exemplo instanciado da base: resultados do openfootball em tabelas Iceberg, por um job AWS Glue no ministack"
+readme = "README.md"
+authors = [{ name = "Rafael Sales", email = "rafael.sales@gmail.com" }]
+# O job roda na imagem do AWS Glue 4.0, que traz Python 3.10 (ADR-004, ADR-009).
+requires-python = ">=3.10"
+dependencies = [
+    # O Spark do Glue 4.0. No host serve para tipos e mocks; o job usa o da imagem.
+    "pyspark==3.3.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.6,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "etl_futebol"
+module-root = "src"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.16.0",
+    "mypy>=1.11",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-v --tb=short --strict-markers"
+markers = [
+    "unit: domínio e aplicação, sem Spark — rápido",
+    "integration: exige uma SparkSession local",
+    "e2e: exige o ministack rodando em http://localhost:4566",
+]
+
+[tool.coverage.run]
+source = ["src/etl_futebol"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 95
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "\\.\\.\\.",
+]
+omit = [
+    # entrypoints: só fazem wiring, cobertos pelo e2e
+    "src/etl_futebol/cli/*",
+]
+
+[tool.ruff]
+line-length = 120
+# py310, não py311: o código roda no Python 3.10 da imagem de job (ADR-004).
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "C90", "N", "RUF"]
+ignore = ["E501"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 8
+
+[tool.ruff.lint.isort]
+known-first-party = ["etl_futebol"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src"]
+strict = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["pyspark.*", "awsglue.*", "boto3.*", "botocore.*"]
+ignore_missing_imports = true
